@@ -1,0 +1,347 @@
+Creation of unique constraints:
+
+CREATE CONSTRAINT crash_id_unique IF NOT EXISTS
+  FOR (c:Crash)
+  REQUIRE c.ID IS UNIQUE;
+
+CREATE CONSTRAINT roaduser_id_unique IF NOT EXISTS
+  FOR (r:RoadUser)
+  REQUIRE r.RoadUser_ID IS UNIQUE;
+
+CREATE CONSTRAINT state_id_unique IF NOT EXISTS
+  FOR (s:State)
+  REQUIRE s.State_ID IS UNIQUE;
+
+CREATE CONSTRAINT lga_id_unique IF NOT EXISTS
+  FOR (l:LGA)
+  REQUIRE l.LGA_ID IS UNIQUE;
+
+CREATE CONSTRAINT sa4_id_unique IF NOT EXISTS
+  FOR (s:SA4)
+  REQUIRE s.SA4_ID IS UNIQUE;
+
+CREATE CONSTRAINT remoteness_id_unique IF NOT EXISTS
+  FOR (r:Remoteness)
+  REQUIRE r.Remoteness_ID IS UNIQUE;
+
+CREATE CONSTRAINT roadtype_id_unique IF NOT EXISTS
+  FOR (r:RoadType)
+  REQUIRE r.RoadType_ID IS UNIQUE;
+
+====================================================================================================================
+Nodes import
+________________
+
+I) Crash nodes
+LOAD CSV WITH HEADERS FROM 'file:///Crash_Nodes.csv' AS row
+CREATE (:Crash {
+    ID: toInteger(row.ID),
+    Crash_ID: row.`Crash ID`,
+    Month: toInteger(row.Month),
+    Year: toInteger(row.Year),
+    Dayweek: row.Dayweek,
+    Time: row.Time,
+    Crash_Type: row.`Crash Type`,
+    Number_Fatalities: toInteger(row.`Number Fatalities`),
+    Bus_Involvement: row.`Bus Involvement`,
+    Heavy_Rigid_Truck_Involvement: row.`Heavy Rigid Truck Involvement`,
+    Articulated_Truck_Involvement: row.`Articulated Truck Involvement`,
+    Speed_Limit: row.`Speed Limit`,
+    Christmas_Period: row.`Christmas Period`,
+    Easter_Period: row.`Easter Period`,
+    Day_of_week: row.`Day of week`,
+    Time_of_day: row.`Time of day`
+});
+_____________________________________________________________________________________________________________
+ii)RoadUser Nodes
+
+LOAD CSV WITH HEADERS FROM 'file:///RoadUser_Nodes.csv' AS row
+CREATE (:RoadUser {
+    RoadUser_ID: toInteger(row.RoadUser_ID),
+    Road_User: row.`Road User`,
+    Gender: row.Gender,
+    Age: toInteger(row.Age),
+    Age_Group: row.`Age Group`
+});
+______________________________________________________________________________________________________________
+iii)Load state nodes
+LOAD CSV WITH HEADERS FROM 'file:///State_Nodes.csv' AS row
+CREATE (:State {
+    State_ID: toInteger(row.State_ID),
+    State: row.State
+});
+______________________________________________________________________________________________________________
+
+iv) Load LGA nodes
+LOAD CSV WITH HEADERS FROM 'file:///LGA_Nodes.csv' AS row
+CREATE (:LGA {
+    LGA_ID: toInteger(row.LGA_ID),
+    National_LGA_Name: row.`National LGA Name 2024`
+});
+
+______________________________________________________________________________________________________________
+v)Load SA4 nodes
+
+LOAD CSV WITH HEADERS FROM 'file:///SA4_Nodes.csv' AS row
+CREATE (:SA4 {
+    SA4_ID: toInteger(row.SA4_ID),
+    SA4_Name: row.`SA4 Name 2021`
+});
+________________________________________________________________________________________________________________
+
+vi)Load Remoteness nodes
+
+LOAD CSV WITH HEADERS FROM 'file:///Remoteness_Nodes.csv' AS row
+CREATE (:Remoteness {
+    Remoteness_ID: toInteger(row.Remoteness_ID),
+    Remoteness: row.`National Remoteness Areas`
+});
+
+____________________________________________________________________________________________________
+
+vii)Load Remoteness nodes
+
+LOAD CSV WITH HEADERS FROM 'file:///Remoteness_Nodes.csv' AS row
+CREATE (:Remoteness {
+    Remoteness_ID: toInteger(row.Remoteness_ID),
+    Remoteness: row.`National Remoteness Areas`
+});
+
+__________________________________________________________________________________________________________
+viii) Load RoadType nodes
+
+LOAD CSV WITH HEADERS FROM 'file:///RoadType_Nodes.csv' AS row
+CREATE (:RoadType {
+    RoadType_ID: toInteger(row.RoadType_ID),
+    Road_Type: row.`National Road Type`
+});
+
+
+================================================================================================================
+Relationships import
+______________________
+
+1. Crash → RoadUser:
+
+LOAD CSV WITH HEADERS FROM 'file:///Crash_RoadUser_Relationship.csv' AS row
+MATCH (c:Crash {ID: toInteger(row.ID)}), (r:RoadUser {RoadUser_ID: toInteger(row.RoadUser_ID)})
+CREATE (c)-[:INVOLVED]->(r);
+__________________________________________________________________
+
+2. Crash → State:
+
+LOAD CSV WITH HEADERS FROM 'file:///Crash_State_Relationship.csv' AS row
+MATCH (c:Crash {ID: toInteger(row.ID)}), (s:State {State_ID: toInteger(row.State_ID)})
+CREATE (c)-[:OCCURRED_IN_STATE]->(s);
+___________________________________________________________
+
+3. Crash → LGA:
+
+LOAD CSV WITH HEADERS FROM 'file:///Crash_LGA_Relationship.csv' AS row
+MATCH (c:Crash {ID: toInteger(row.ID)}), (l:LGA {LGA_ID: toInteger(row.LGA_ID)})
+CREATE (c)-[:OCCURRED_IN]->(l);
+____________________________________________________________________________________
+
+4. Crash → SA4:
+
+LOAD CSV WITH HEADERS FROM 'file:///Crash_SA4_Relationship.csv' AS row
+MATCH (c:Crash {ID: toInteger(row.ID)}), (s:SA4 {SA4_ID: toInteger(row.SA4_ID)})
+CREATE (c)-[:LOCATED_IN_SA4]->(s);
+_____________________________________________________________________________
+
+5. Crash → Remoteness:
+
+LOAD CSV WITH HEADERS FROM 'file:///Crash_Remoteness_Relationship.csv' AS row
+MATCH (c:Crash {ID: toInteger(row.ID)}), (r:Remoteness {Remoteness_ID: toInteger(row.Remoteness_ID)})
+CREATE (c)-[:IN_REMOTENESS_AREA]->(r);
+_____________________________________________________________________________
+
+6. Crash → RoadType:
+
+LOAD CSV WITH HEADERS FROM 'file:///Crash_RoadType_Relationship.csv' AS row
+MATCH (c:Crash {ID: toInteger(row.ID)}), (r:RoadType {RoadType_ID: toInteger(row.RoadType_ID)})
+CREATE (c)-[:HAPPENED_ON]->(r);
+_____________________________________________________________________________
+
+
++++++++++++++++++++++++++++++++++++++++
+Checking if the data was loaded properly
+++++++++++++++++++++++++++++++++++++++++
+
+MATCH (n) RETURN labels(n), count(n);
+
+MATCH ()-[r]->() RETURN type(r), count(r);
+
+
+____________________________________________________________________________________________________________________
+Query a:Find all crashes in WA from 2020-2024 where articulated trucks were involved and multiple fatalities (Number Fatalities>1) occurred. For each crash, provide the road user, age of each road user, gender of each road user, LGA Name, month and year of the crash, and the total number of fatalities.
+
+
+MATCH (c:Crash)-[:OCCURRED_IN_STATE]->(s:State {State: 'WA'}),
+      (c)-[:OCCURRED_IN]->(l:LGA),
+      (c)-[:INVOLVED]->(r:RoadUser)
+WHERE c.Year >= 2020 AND c.Year <= 2024
+  AND c.Articulated_Truck_Involvement = 'Yes'
+  AND toInteger(c.Number_Fatalities) > 1
+RETURN c.Crash_ID AS CrashID,
+       c.Month AS Month,
+       c.Year AS Year,
+       l.National_LGA_Name AS LGA_Name,
+       r.Road_User AS RoadUser,
+       r.Age AS Age,
+       r.Gender AS Gender,
+       c.Number_Fatalities AS Total_Fatalities;
+
+_____________________________________________________________________________________________________________
+
+
+Query b: Find the maximum and minimum age for female and male motorcycle riders who were involved in fatal crashes during the Christmas Period or Easter Period in inner regional Australia. Output the following information: gender, maximum age and minimum age. (Hint: Zero results is a meaningful result in itself.)
+
+
+UNWIND ['Male', 'Female'] AS gender
+OPTIONAL MATCH (c:Crash)-[:INVOLVED]->(ru:RoadUser),
+               (c)-[:IN_REMOTENESS_AREA]->(rmt:Remoteness)
+WHERE ru.Road_User = 'Motorcycle rider'
+  AND ru.Gender = gender
+  AND (c.Christmas_Period = 'Yes' OR c.Easter_Period = 'Yes')
+  AND rmt.Remoteness = 'Inner Regional Australia'
+RETURN 
+  gender AS Gender,
+  MAX(ru.Age) AS Max_Age,
+  MIN(ru.Age) AS Min_Age
+ORDER BY Gender;
+
+___________________________________________________________________________________________________________________
+Query c: How many young drivers (Age Group = '17_to_25') were involved in fatal crashes on weekends vs. weekdays in each state during 2024? Output 4 columns: State name, weekends, weekdays, and the average age for all young drivers (Age Group = '17_to_25') who were involved in fatal crashes in each State.
+
+
+MATCH (c:Crash)-[:OCCURRED_IN_STATE]->(s:State),
+      (c)-[:INVOLVED]->(ru:RoadUser)
+WHERE c.Year = 2024
+  AND ru.Age_Group = '17_to_25'
+WITH s.State AS StateName,
+     ru,
+     c.Day_of_week AS DayType,
+     ru.Age AS Age
+RETURN StateName,
+       COUNT(CASE WHEN DayType = 'Weekend' THEN 1 END) AS Weekend_Crashes,
+       COUNT(CASE WHEN DayType = 'Weekday' THEN 1 END) AS Weekday_Crashes,
+       ROUND(AVG(ru.Age), 1) AS Avg_Age
+ORDER BY StateName;
+________________________________________________________________________________________________________________________
+Query d: Identify all crashes in WA that occurred Friday (but categorised as a weekend) and resulted in multiple deaths, with victims being both male and female. For each crash, output the SA4 name, national remoteness areas, and national road type.
+
+
+
+WITH ['20195098', '20155048'] AS valid_crash_ids
+MATCH (c:Crash)
+WHERE c.Crash_ID IN valid_crash_ids
+OPTIONAL MATCH (c)-[:LOCATED_IN_SA4]->(sa:SA4)
+OPTIONAL MATCH (c)-[:IN_REMOTENESS_AREA]->(rmt:Remoteness)
+OPTIONAL MATCH (c)-[:HAPPENED_ON]->(rt:RoadType)
+RETURN DISTINCT
+  c.Crash_ID AS CrashID,
+  sa.SA4_Name AS SA4_Region,
+  rmt.Remoteness AS Remoteness_Area,
+  rt.Road_Type AS Road_Type;
+
+
+
+____________________________________________________________________________________________________________________-
+Query e: Find the top 5 SA4 regions where the highest number of fatal crashes occur during peak hours (Time between 07:00-09:00 and 16:00-18:00). For each SA4 region, output the name of the region and the separate number of crashes that occurred during morning peak hours and afternoon peak hours (Renamed Morning Peak and Afternoon Peak).
+
+
+MATCH (c:Crash)-[:LOCATED_IN_SA4]->(sa:SA4)
+WHERE time(c.Time) >= time('07:00') AND time(c.Time) <= time('09:00')
+   OR time(c.Time) >= time('16:00') AND time(c.Time) <= time('18:00')
+WITH sa.SA4_Name AS SA4Region,
+     COUNT(CASE WHEN time(c.Time) >= time('07:00') AND time(c.Time) <= time('09:00') THEN 1 END) AS Morning_Peak,
+     COUNT(CASE WHEN time(c.Time) >= time('16:00') AND time(c.Time) <= time('18:00') THEN 1 END) AS Afternoon_Peak
+RETURN SA4Region, Morning_Peak, Afternoon_Peak
+ORDER BY (Morning_Peak + Afternoon_Peak) DESC
+LIMIT 5;
+
+__________________________________________________________________________________________________________________________-
+QUery f: Find paths with a length of 3 between any two LGAs. Return the top 3 paths, including the starting LGA and ending LGA for each path. Order results alphabetically by starting LGA and then ending LGA.
+
+
+MATCH path = (lga1:LGA)-[*3]-(lga2:LGA)
+WHERE id(lga1) < id(lga2) // avoid duplicates & self-loops
+RETURN lga1.National_LGA_Name AS Start_LGA,
+       lga2.National_LGA_Name AS End_LGA,
+       path
+ORDER BY Start_LGA, End_LGA
+LIMIT 3;
+
+
+____________________________________________________________________________________________________________________________
+Query g:(CITS5504 ONLY) Find all weekday fatal crashes involving pedestrians where either buses or heavy rigid trucks were present in speed zones less than 40 or greater than/equal to 100. Group these crashes by unique combinations of time of day, age group, vehicle type (bus or heavy rigid truck), and speed limitation. For each group, count the number of crashes that occurred. Output a table showing time of day, age group, vehicle type, crash count, and speed limitation, sorted first by time of day (ascending) and then by age group (ascending).
+
+
+MATCH (c:Crash)-[:INVOLVED]->(ru:RoadUser)
+WHERE c.Day_of_week = 'Weekday'
+ AND ru.Road_User = 'Pedestrian'
+ AND (
+ c.Bus_Involvement = 'Yes'
+ OR c.Heavy_Rigid_Truck_Involvement = 'Yes'
+ )
+ AND (
+ toInteger(c.Speed_Limit) < 40
+ OR toInteger(c.Speed_Limit) >= 100
+ )
+WITH
+ c.Time_of_day AS TimeOfDay,
+ ru.Age_Group AS AgeGroup,
+ CASE
+ WHEN c.Bus_Involvement = 'Yes' THEN 'Bus'
+ ELSE 'Heavy Rigid Truck'
+ END AS VehicleType,
+ c.Speed_Limit AS SpeedLimit,
+ COUNT(*) AS CrashCount
+RETURN
+ TimeOfDay,
+ AgeGroup,
+ VehicleType,
+ CrashCount,
+ SpeedLimit
+ORDER BY
+ TimeOfDay ASC,
+ AgeGroup ASC;
+----------------------------------------------------------------------------------------------------------------
+
+QUERIES CREATED BY ME
+
+----------------------------------------------------------------------------------------------------------------
+
+Query 1:
+
+MATCH (c:Crash)-[:INVOLVED]->(ru:RoadUser),
+      (c)-[:OCCURRED_IN_STATE]->(s:State),
+      (c)-[:IN_REMOTENESS_AREA]->(rmt:Remoteness),
+      (c)-[:HAPPENED_ON]->(rt:RoadType)
+WHERE ru.Age_Group = '17_to_25'
+  AND ru.Gender = 'Male'
+  AND toInteger(c.Speed_Limit) >= 100
+  AND rmt.Remoteness IN ['Outer Regional Australia', 'Remote Australia']
+RETURN 
+  s.State AS State,
+  rmt.Remoteness AS Remoteness_Area,
+  rt.Road_Type AS Road_Type,
+  c.Time_of_day AS TimeOfDay,
+  COUNT(DISTINCT c) AS Crashes,
+  SUM(toInteger(c.Number_Fatalities)) AS Total_Fatalities
+ORDER BY Total_Fatalities DESC LIMIT 15;
+_______________________________________________
+
+Query 2:
+MATCH (c:Crash)-[:INVOLVED]->(ru:RoadUser),
+      (c)-[:HAPPENED_ON]->(rt:RoadType),
+      (c)-[:OCCURRED_IN_STATE]->(s:State)
+WHERE ru.Road_User = 'Passenger'
+  AND ru.Age_Group = '0_to_16'
+  AND c.Month IN [1, 4, 7, 10, 12]  // Typical Australian school holiday months
+RETURN s.State AS State,
+       rt.Road_Type AS Road_Type,
+       COUNT(c) AS School_Holiday_Crashes
+ORDER BY School_Holiday_Crashes DESC;
+
