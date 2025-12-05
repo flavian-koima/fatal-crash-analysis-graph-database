@@ -1,0 +1,9 @@
+National Road Type,RoadType_ID
+Arterial Road,1
+Local Road,2
+National or State Highway,3
+Sub-arterial Road,4
+Collector Road,5
+Pedestrian Thoroughfare,6
+Access road,7
+Busway,8
