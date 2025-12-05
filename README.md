@@ -87,7 +87,7 @@ All generated CSVs are included in the `/data` folder.
 
 ---
 
-## 🧠 **4. Cypher Queries & Insights**
+##  **4. Cypher Queries & Insights**
 
 Several analytical queries were implemented, including:
 
